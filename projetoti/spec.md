@@ -1,6 +1,6 @@
 ﻿# SPEC - Base de Dados Focada no Usuário (LGPD)
 
-Este documento define a base SPEC para a SkyLine Cia, derivada do banco operacional (sistema_voos), com foco em dados pessoais, consentimento e experiência do usuário.
+Este documento define a base SPEC para a Sky CIA, derivada do banco operacional (sistema_voos), com foco em dados pessoais, consentimento e experiência do usuário.
 
 ## 1) Tabelas principais
 

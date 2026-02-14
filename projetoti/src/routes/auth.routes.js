@@ -9,10 +9,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'segredo_super_secreto';
 
 // POST /auth/register
 router.post('/register', async (req, res) => {
-  const { nome, email, senha, perfil } = req.body;
+  const { nome, email, senha, perfil, companhia } = req.body;
 
   if (!nome || !email || !senha) {
     return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
+  }
+  if (perfil === 'CIA' && !companhia) {
+    return res.status(400).json({ error: 'Companhia é obrigatória para perfil CIA' });
   }
 
   try {
@@ -26,11 +29,24 @@ router.post('/register', async (req, res) => {
 
     const hash = await bcrypt.hash(senha, 10);
 
-    await dbSpec.query(
-      `INSERT INTO usuario (nome, email, senha_hash, perfil)
-       VALUES (?, ?, ?, ?)`,
-      [nome, email, hash, perfil || 'OPERADOR']
-    );
+    try {
+      await dbSpec.query(
+        `INSERT INTO usuario (nome, email, senha_hash, perfil, companhia)
+         VALUES (?, ?, ?, ?, ?)`,
+        [nome, email, hash, perfil || 'OPERADOR', companhia || null]
+      );
+    } catch (insertErr) {
+      // Fallback for older schema without "companhia" column.
+      if (insertErr.code === 'ER_BAD_FIELD_ERROR') {
+        await dbSpec.query(
+          `INSERT INTO usuario (nome, email, senha_hash, perfil)
+           VALUES (?, ?, ?, ?)`,
+          [nome, email, hash, perfil || 'OPERADOR']
+        );
+      } else {
+        throw insertErr;
+      }
+    }
 
     return res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
   } catch (err) {
@@ -48,10 +64,24 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const [rows] = await dbSpec.query(
-      'SELECT id, nome, email, senha_hash, perfil FROM usuario WHERE email = ?',
-      [email]
-    );
+    let rows;
+    try {
+      const [result] = await dbSpec.query(
+        'SELECT id, nome, email, senha_hash, perfil, companhia FROM usuario WHERE email = ?',
+        [email]
+      );
+      rows = result;
+    } catch (selectErr) {
+      if (selectErr.code === 'ER_BAD_FIELD_ERROR') {
+        const [result] = await dbSpec.query(
+          'SELECT id, nome, email, senha_hash, perfil FROM usuario WHERE email = ?',
+          [email]
+        );
+        rows = result.map((u) => ({ ...u, companhia: null }));
+      } else {
+        throw selectErr;
+      }
+    }
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
@@ -76,7 +106,8 @@ router.post('/login', async (req, res) => {
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email,
-        perfil: usuario.perfil
+        perfil: usuario.perfil,
+        companhia: usuario.companhia
       }
     });
   } catch (err) {
@@ -88,10 +119,24 @@ router.post('/login', async (req, res) => {
 // GET /auth/me
 router.get('/me', autenticar, async (req, res) => {
   try {
-    const [rows] = await dbSpec.query(
-      'SELECT id, nome, email, perfil, criado_em FROM usuario WHERE id = ?',
-      [req.usuario.id]
-    );
+    let rows;
+    try {
+      const [result] = await dbSpec.query(
+        'SELECT id, nome, email, perfil, companhia, criado_em FROM usuario WHERE id = ?',
+        [req.usuario.id]
+      );
+      rows = result;
+    } catch (selectErr) {
+      if (selectErr.code === 'ER_BAD_FIELD_ERROR') {
+        const [result] = await dbSpec.query(
+          'SELECT id, nome, email, perfil, criado_em FROM usuario WHERE id = ?',
+          [req.usuario.id]
+        );
+        rows = result.map((u) => ({ ...u, companhia: null }));
+      } else {
+        throw selectErr;
+      }
+    }
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
@@ -101,6 +146,7 @@ router.get('/me', autenticar, async (req, res) => {
       nome: usuario.nome,
       email: usuario.email,
       perfil: usuario.perfil,
+      companhia: usuario.companhia,
       criado_em: usuario.criado_em
     });
   } catch (err) {

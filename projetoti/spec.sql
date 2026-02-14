@@ -7,9 +7,17 @@ CREATE TABLE usuario (
   nome VARCHAR(100) NOT NULL,
   email VARCHAR(120) NOT NULL UNIQUE,
   senha_hash VARCHAR(255) NOT NULL,
-  perfil ENUM('ADMIN','OPERADOR','CIA','VISUALIZADOR') NOT NULL DEFAULT 'OPERADOR',
+  perfil ENUM('ADMIN','OPERADOR','CIA','PASSAGEIRO') NOT NULL DEFAULT 'OPERADOR',
+  companhia VARCHAR(120) NULL,
   criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migracao (caso o banco ja exista)
+-- ALTER TABLE usuario
+--   ADD COLUMN companhia VARCHAR(120) NULL;
+-- 
+-- ALTER TABLE usuario
+--   MODIFY perfil ENUM('ADMIN','OPERADOR','CIA','PASSAGEIRO') NOT NULL DEFAULT 'OPERADOR';
 
 -- Consentimento LGPD
 CREATE TABLE consentimento (

@@ -2,17 +2,35 @@
 setlocal
 
 REM ===== Configuracao padrao (edite se precisar) =====
-set MYSQL_USER=root
-set MYSQL_HOST=localhost
+if "%MYSQL_USER%"=="" set MYSQL_USER=root
+if "%MYSQL_HOST%"=="" set MYSQL_HOST=localhost
 
-set /p MYSQL_PASS=Digite a senha do MySQL (ENTER se vazia):
-if not "%MYSQL_PASS%"=="" (
-  set MYSQL_PASS=-p%MYSQL_PASS%
+if not "%MYSQL_PASS_RAW%"=="" (
+  set MYSQL_PASS=-p%MYSQL_PASS_RAW%
 ) else (
-  set MYSQL_PASS=
+  set /p MYSQL_PASS_RAW=Digite a senha do MySQL (ENTER se vazia):
+  if not "%MYSQL_PASS_RAW%"=="" (
+    set MYSQL_PASS=-p%MYSQL_PASS_RAW%
+  ) else (
+    set MYSQL_PASS=
+  )
 )
 
 set ROOT=%~dp0
+
+REM Verifica Node.js e npm
+where node >nul 2>&1
+if errorlevel 1 (
+  echo [ERRO] Node.js nao encontrado.
+  echo Execute install-node.bat e tente novamente.
+  exit /b 1
+)
+where npm >nul 2>&1
+if errorlevel 1 (
+  echo [ERRO] npm nao encontrado.
+  echo Execute install-node.bat e tente novamente.
+  exit /b 1
+)
 
 echo [1/4] Instalando dependencias do back-end...
 cd /d "%ROOT%projetoti" || exit /b 1
