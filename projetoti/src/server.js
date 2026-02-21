@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const voosRoutes = require('./routes/voos.routes');
 const authRoutes = require('./routes/auth.routes'); // <-- novo
+const iaRoutes = require('./routes/ia.routes');
 
 const app = express();
 app.use(cors());
@@ -11,11 +12,9 @@ app.use(express.json());
 
 app.use('/voos', voosRoutes);
 app.use('/auth', authRoutes); // <-- novo
+app.use('/ia', iaRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`API rodando na porta ${port}`);
 });
-const iaRoutes = require('./routes/ia.routes');
-
-app.use('/ia', iaRoutes);

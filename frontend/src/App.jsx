@@ -7,9 +7,9 @@ import './App.css';
 const MOCK_VOOS = [
   { cia: 'TAP', numero: 'TP8091', destino: 'Lisboa', horario: '14:30', portao: 'A12', status: 'Confirmado' },
   { cia: 'LATAM', numero: 'LA3502', destino: 'Sao Paulo', horario: '15:15', portao: 'B07', status: 'Confirmado' },
-  { cia: 'Gol', numero: 'G31847', destino: 'Rio de Janeiro', horario: '15:45', portao: 'C04', status: 'Atraso Provavel' },
+  { cia: 'Gol', numero: 'G31847', destino: 'Rio de Janeiro', horario: '15:45', portao: 'C04', status: 'Atraso Provável' },
   { cia: 'Azul', numero: 'AD4123', destino: 'Brasilia', horario: '16:20', portao: 'A09', status: 'Confirmado' },
-  { cia: 'United', numero: 'UA0834', destino: 'Miami', horario: '16:50', portao: 'D02', status: 'Atraso Provavel' },
+  { cia: 'United', numero: 'UA0834', destino: 'Miami', horario: '16:50', portao: 'D02', status: 'Atraso Provável' },
   { cia: 'Air France', numero: 'AF0456', destino: 'Paris', horario: '17:30', portao: 'E11', status: 'Cancelado' },
   { cia: 'Emirates', numero: 'EK0262', destino: 'Dubai', horario: '18:00', portao: 'D08', status: 'Confirmado' },
   { cia: 'Avianca', numero: 'AV0127', destino: 'Bogota', horario: '18:45', portao: 'B15', status: 'Confirmado' },
@@ -33,7 +33,7 @@ const MOCK_RELATORIOS = [
   { nome: 'Previsao de Atrasos - Proxima Semana', tipo: 'Preditivo', data: '14/02/2026', tamanho: '-', status: 'Agendado', lgpd: 'Conforme' },
 ];
 
-const MAP_FLIGHTS = [
+const MAP_FLIGHTS_RAW = [
   {
     id: 'TP8091',
     cia: 'TAP',
@@ -351,6 +351,171 @@ const MAP_FLIGHTS = [
   },
 ];
 
+const AIRPORT_COORDS = {
+  ADD: { lat: 8.9779, lng: 38.7993 },
+  AKL: { lat: -37.0082, lng: 174.785 },
+  AMS: { lat: 52.3105, lng: 4.7683 },
+  BEL: { lat: -1.3793, lng: -48.4763 },
+  BKK: { lat: 13.69, lng: 100.7501 },
+  BSB: { lat: -15.8692, lng: -47.9208 },
+  CDG: { lat: 49.0097, lng: 2.5479 },
+  CGH: { lat: -23.6267, lng: -46.6564 },
+  CNF: { lat: -19.6357, lng: -43.9669 },
+  DOH: { lat: 25.2736, lng: 51.6081 },
+  DXB: { lat: 25.2532, lng: 55.3657 },
+  FRA: { lat: 50.0379, lng: 8.5622 },
+  GRU: { lat: -23.4356, lng: -46.4731 },
+  JNB: { lat: -26.1337, lng: 28.242 },
+  LHR: { lat: 51.47, lng: -0.4543 },
+  LIS: { lat: 38.7742, lng: -9.1342 },
+  LOS: { lat: 6.5774, lng: 3.3212 },
+  MAD: { lat: 40.4983, lng: -3.5676 },
+  NBO: { lat: -1.3192, lng: 36.9278 },
+  NRT: { lat: 35.772, lng: 140.3929 },
+  PEK: { lat: 40.0799, lng: 116.6031 },
+  REC: { lat: -8.1265, lng: -34.9236 },
+  SCL: { lat: -33.3929, lng: -70.7858 },
+  SFO: { lat: 37.6213, lng: -122.379 },
+  SIN: { lat: 1.3644, lng: 103.9915 },
+  SVO: { lat: 55.9726, lng: 37.4146 },
+  SYD: { lat: -33.9399, lng: 151.1753 },
+  VCP: { lat: -23.0074, lng: -47.1345 },
+};
+
+function pointGridToLatLng(point) {
+  return [85 - point.y * 1.7, point.x * 3.6 - 180];
+}
+
+function enrichAirportPoint(point) {
+  const coord = AIRPORT_COORDS[point.code];
+  if (coord) return { ...point, lat: coord.lat, lng: coord.lng };
+  const [lat, lng] = pointGridToLatLng(point);
+  return { ...point, lat, lng };
+}
+
+const MAP_FLIGHTS = MAP_FLIGHTS_RAW.map((flight) => ({
+  ...flight,
+  from: enrichAirportPoint(flight.from),
+  to: enrichAirportPoint(flight.to),
+}));
+
+const MAP_AIRPORT_POINTS = [
+  // Brasil (por estado)
+  { code: 'GRU', city: 'Sao Paulo', country: 'Brasil', state: 'SP', lat: -23.4356, lng: -46.4731 },
+  { code: 'CGH', city: 'Sao Paulo', country: 'Brasil', state: 'SP', lat: -23.6267, lng: -46.6564 },
+  { code: 'VCP', city: 'Campinas', country: 'Brasil', state: 'SP', lat: -23.0074, lng: -47.1345 },
+  { code: 'SDU', city: 'Rio de Janeiro', country: 'Brasil', state: 'RJ', lat: -22.9114, lng: -43.1649 },
+  { code: 'GIG', city: 'Rio de Janeiro', country: 'Brasil', state: 'RJ', lat: -22.809, lng: -43.2506 },
+  { code: 'BSB', city: 'Brasilia', country: 'Brasil', state: 'DF', lat: -15.8692, lng: -47.9208 },
+  { code: 'CNF', city: 'Belo Horizonte', country: 'Brasil', state: 'MG', lat: -19.6357, lng: -43.9669 },
+  { code: 'REC', city: 'Recife', country: 'Brasil', state: 'PE', lat: -8.1265, lng: -34.9236 },
+  { code: 'SSA', city: 'Salvador', country: 'Brasil', state: 'BA', lat: -12.9086, lng: -38.3225 },
+  { code: 'FOR', city: 'Fortaleza', country: 'Brasil', state: 'CE', lat: -3.7763, lng: -38.5326 },
+  { code: 'BEL', city: 'Belem', country: 'Brasil', state: 'PA', lat: -1.3793, lng: -48.4763 },
+  { code: 'MAO', city: 'Manaus', country: 'Brasil', state: 'AM', lat: -3.0386, lng: -60.0497 },
+  { code: 'POA', city: 'Porto Alegre', country: 'Brasil', state: 'RS', lat: -29.9944, lng: -51.1714 },
+  { code: 'CWB', city: 'Curitiba', country: 'Brasil', state: 'PR', lat: -25.5317, lng: -49.1761 },
+  { code: 'FLN', city: 'Florianopolis', country: 'Brasil', state: 'SC', lat: -27.6703, lng: -48.5525 },
+  { code: 'NAT', city: 'Natal', country: 'Brasil', state: 'RN', lat: -5.7681, lng: -35.3761 },
+  { code: 'MCZ', city: 'Maceio', country: 'Brasil', state: 'AL', lat: -9.5108, lng: -35.7917 },
+  { code: 'AJU', city: 'Aracaju', country: 'Brasil', state: 'SE', lat: -10.984, lng: -37.0703 },
+  { code: 'GYN', city: 'Goiania', country: 'Brasil', state: 'GO', lat: -16.632, lng: -49.2207 },
+  { code: 'CGB', city: 'Cuiaba', country: 'Brasil', state: 'MT', lat: -15.6529, lng: -56.1167 },
+  { code: 'PMW', city: 'Palmas', country: 'Brasil', state: 'TO', lat: -10.2915, lng: -48.357 },
+  { code: 'RIO', city: 'Rio Branco', country: 'Brasil', state: 'AC', lat: -9.8689, lng: -67.8981 },
+  { code: 'BVB', city: 'Boa Vista', country: 'Brasil', state: 'RR', lat: 2.8463, lng: -60.6909 },
+  { code: 'PVH', city: 'Porto Velho', country: 'Brasil', state: 'RO', lat: -8.7093, lng: -63.9023 },
+  { code: 'MCP', city: 'Macapa', country: 'Brasil', state: 'AP', lat: 0.0507, lng: -51.0722 },
+  { code: 'THE', city: 'Teresina', country: 'Brasil', state: 'PI', lat: -5.0607, lng: -42.8235 },
+  { code: 'SLZ', city: 'Sao Luis', country: 'Brasil', state: 'MA', lat: -2.5854, lng: -44.2341 },
+  { code: 'VIX', city: 'Vitoria', country: 'Brasil', state: 'ES', lat: -20.258, lng: -40.2864 },
+  { code: 'JPA', city: 'Joao Pessoa', country: 'Brasil', state: 'PB', lat: -7.1459, lng: -34.9486 },
+  { code: 'UDI', city: 'Uberlandia', country: 'Brasil', state: 'MG', lat: -18.8836, lng: -48.2253 },
+  // Internacional (por pais)
+  // America do Sul
+  { code: 'SCL', city: 'Santiago', country: 'Chile', state: '-', lat: -33.3929, lng: -70.7858 },
+  { code: 'EZE', city: 'Buenos Aires', country: 'Argentina', state: '-', lat: -34.8222, lng: -58.5358 },
+  { code: 'AEP', city: 'Buenos Aires', country: 'Argentina', state: '-', lat: -34.5592, lng: -58.4156 },
+  { code: 'MVD', city: 'Montevideu', country: 'Uruguai', state: '-', lat: -34.8384, lng: -56.0308 },
+  { code: 'ASU', city: 'Assuncao', country: 'Paraguai', state: '-', lat: -25.2399, lng: -57.5191 },
+  { code: 'LIM', city: 'Lima', country: 'Peru', state: '-', lat: -12.0219, lng: -77.1143 },
+  { code: 'BOG', city: 'Bogota', country: 'Colombia', state: '-', lat: 4.7016, lng: -74.1469 },
+  { code: 'UIO', city: 'Quito', country: 'Equador', state: '-', lat: -0.1292, lng: -78.3575 },
+  { code: 'CCS', city: 'Caracas', country: 'Venezuela', state: '-', lat: 10.6031, lng: -66.9906 },
+  // America do Norte e Central
+  { code: 'SFO', city: 'San Francisco', country: 'EUA', state: 'CA', lat: 37.6213, lng: -122.379 },
+  { code: 'LAX', city: 'Los Angeles', country: 'EUA', state: 'CA', lat: 33.9416, lng: -118.4085 },
+  { code: 'JFK', city: 'Nova York', country: 'EUA', state: 'NY', lat: 40.6413, lng: -73.7781 },
+  { code: 'EWR', city: 'Newark', country: 'EUA', state: 'NJ', lat: 40.6895, lng: -74.1745 },
+  { code: 'MIA', city: 'Miami', country: 'EUA', state: 'FL', lat: 25.7959, lng: -80.287 },
+  { code: 'ORD', city: 'Chicago', country: 'EUA', state: 'IL', lat: 41.9742, lng: -87.9073 },
+  { code: 'ATL', city: 'Atlanta', country: 'EUA', state: 'GA', lat: 33.6407, lng: -84.4277 },
+  { code: 'IAD', city: 'Washington', country: 'EUA', state: 'VA', lat: 38.9531, lng: -77.4565 },
+  { code: 'SEA', city: 'Seattle', country: 'EUA', state: 'WA', lat: 47.4502, lng: -122.3088 },
+  { code: 'YYZ', city: 'Toronto', country: 'Canada', state: '-', lat: 43.6777, lng: -79.6248 },
+  { code: 'YVR', city: 'Vancouver', country: 'Canada', state: '-', lat: 49.1967, lng: -123.1815 },
+  { code: 'MEX', city: 'Cidade do Mexico', country: 'Mexico', state: '-', lat: 19.4361, lng: -99.0719 },
+  { code: 'PTY', city: 'Cidade do Panama', country: 'Panama', state: '-', lat: 9.0714, lng: -79.3835 },
+  // Europa
+  { code: 'LIS', city: 'Lisboa', country: 'Portugal', state: '-', lat: 38.7742, lng: -9.1342 },
+  { code: 'OPO', city: 'Porto', country: 'Portugal', state: '-', lat: 41.2481, lng: -8.6814 },
+  { code: 'MAD', city: 'Madri', country: 'Espanha', state: '-', lat: 40.4983, lng: -3.5676 },
+  { code: 'BCN', city: 'Barcelona', country: 'Espanha', state: '-', lat: 41.2974, lng: 2.0833 },
+  { code: 'CDG', city: 'Paris', country: 'Franca', state: '-', lat: 49.0097, lng: 2.5479 },
+  { code: 'ORY', city: 'Paris', country: 'Franca', state: '-', lat: 48.7262, lng: 2.3652 },
+  { code: 'FRA', city: 'Frankfurt', country: 'Alemanha', state: '-', lat: 50.0379, lng: 8.5622 },
+  { code: 'MUC', city: 'Munique', country: 'Alemanha', state: '-', lat: 48.3538, lng: 11.7861 },
+  { code: 'AMS', city: 'Amsterda', country: 'Holanda', state: '-', lat: 52.3105, lng: 4.7683 },
+  { code: 'LHR', city: 'Londres', country: 'Reino Unido', state: '-', lat: 51.47, lng: -0.4543 },
+  { code: 'LGW', city: 'Londres', country: 'Reino Unido', state: '-', lat: 51.1537, lng: -0.1821 },
+  { code: 'DUB', city: 'Dublin', country: 'Irlanda', state: '-', lat: 53.4213, lng: -6.2701 },
+  { code: 'FCO', city: 'Roma', country: 'Italia', state: '-', lat: 41.8003, lng: 12.2389 },
+  { code: 'MXP', city: 'Milao', country: 'Italia', state: '-', lat: 45.63, lng: 8.7281 },
+  { code: 'ZRH', city: 'Zurique', country: 'Suica', state: '-', lat: 47.4581, lng: 8.5555 },
+  { code: 'VIE', city: 'Viena', country: 'Austria', state: '-', lat: 48.1103, lng: 16.5697 },
+  { code: 'CPH', city: 'Copenhague', country: 'Dinamarca', state: '-', lat: 55.6181, lng: 12.656 },
+  { code: 'ARN', city: 'Estocolmo', country: 'Suecia', state: '-', lat: 59.6519, lng: 17.9186 },
+  { code: 'OSL', city: 'Oslo', country: 'Noruega', state: '-', lat: 60.1939, lng: 11.1004 },
+  { code: 'HEL', city: 'Helsinque', country: 'Finlandia', state: '-', lat: 60.3172, lng: 24.9633 },
+  { code: 'IST', city: 'Istambul', country: 'Turquia', state: '-', lat: 41.2753, lng: 28.7519 },
+  { code: 'ATH', city: 'Atenas', country: 'Grecia', state: '-', lat: 37.9364, lng: 23.9475 },
+  // Africa
+  { code: 'NBO', city: 'Nairobi', country: 'Quenia', state: '-', lat: -1.3192, lng: 36.9278 },
+  { code: 'JNB', city: 'Johannesburgo', country: 'Africa do Sul', state: '-', lat: -26.1337, lng: 28.242 },
+  { code: 'CPT', city: 'Cidade do Cabo', country: 'Africa do Sul', state: '-', lat: -33.97, lng: 18.5972 },
+  { code: 'ADD', city: 'Adis Abeba', country: 'Etiopia', state: '-', lat: 8.9779, lng: 38.7993 },
+  { code: 'LOS', city: 'Lagos', country: 'Nigeria', state: '-', lat: 6.5774, lng: 3.3212 },
+  { code: 'CAI', city: 'Cairo', country: 'Egito', state: '-', lat: 30.1219, lng: 31.4056 },
+  { code: 'CMN', city: 'Casablanca', country: 'Marrocos', state: '-', lat: 33.3675, lng: -7.5899 },
+  { code: 'ALG', city: 'Argel', country: 'Argelia', state: '-', lat: 36.691, lng: 3.2154 },
+  { code: 'DSS', city: 'Dacar', country: 'Senegal', state: '-', lat: 14.67, lng: -17.0733 },
+  // Oriente Medio e Asia
+  { code: 'DXB', city: 'Dubai', country: 'EAU', state: '-', lat: 25.2532, lng: 55.3657 },
+  { code: 'AUH', city: 'Abu Dhabi', country: 'EAU', state: '-', lat: 24.433, lng: 54.6511 },
+  { code: 'DOH', city: 'Doha', country: 'Catar', state: '-', lat: 25.2736, lng: 51.6081 },
+  { code: 'RUH', city: 'Riade', country: 'Arabia Saudita', state: '-', lat: 24.9576, lng: 46.6988 },
+  { code: 'TLV', city: 'Tel Aviv', country: 'Israel', state: '-', lat: 32.0005, lng: 34.8708 },
+  { code: 'BKK', city: 'Bangkok', country: 'Tailandia', state: '-', lat: 13.69, lng: 100.7501 },
+  { code: 'SIN', city: 'Singapura', country: 'Singapura', state: '-', lat: 1.3644, lng: 103.9915 },
+  { code: 'KUL', city: 'Kuala Lumpur', country: 'Malasia', state: '-', lat: 2.7456, lng: 101.7072 },
+  { code: 'CGK', city: 'Jacarta', country: 'Indonesia', state: '-', lat: -6.1256, lng: 106.6559 },
+  { code: 'DEL', city: 'Nova Delhi', country: 'India', state: '-', lat: 28.5562, lng: 77.1 },
+  { code: 'BOM', city: 'Mumbai', country: 'India', state: '-', lat: 19.0896, lng: 72.8656 },
+  { code: 'HKG', city: 'Hong Kong', country: 'China', state: '-', lat: 22.308, lng: 113.9185 },
+  { code: 'PVG', city: 'Xangai', country: 'China', state: '-', lat: 31.1443, lng: 121.8083 },
+  { code: 'PEK', city: 'Pequim', country: 'China', state: '-', lat: 40.0799, lng: 116.6031 },
+  { code: 'ICN', city: 'Seul', country: 'Coreia do Sul', state: '-', lat: 37.4602, lng: 126.4407 },
+  { code: 'NRT', city: 'Toquio', country: 'Japao', state: '-', lat: 35.772, lng: 140.3929 },
+  { code: 'HND', city: 'Toquio', country: 'Japao', state: '-', lat: 35.5494, lng: 139.7798 },
+  // Oceania
+  { code: 'SYD', city: 'Sydney', country: 'Australia', state: '-', lat: -33.9399, lng: 151.1753 },
+  { code: 'MEL', city: 'Melbourne', country: 'Australia', state: '-', lat: -37.669, lng: 144.841 },
+  { code: 'BNE', city: 'Brisbane', country: 'Australia', state: '-', lat: -27.3842, lng: 153.1175 },
+  { code: 'PER', city: 'Perth', country: 'Australia', state: '-', lat: -31.9403, lng: 115.9672 },
+  { code: 'AKL', city: 'Auckland', country: 'Nova Zelandia', state: '-', lat: -37.0082, lng: 174.785 },
+  { code: 'CHC', city: 'Christchurch', country: 'Nova Zelandia', state: '-', lat: -43.4894, lng: 172.5322 },
+];
+
 function mask(text, enabled) {
   return enabled ? '***' : text;
 }
@@ -364,32 +529,64 @@ function statusClass(status) {
 }
 
 function pointToLatLng(point) {
-  const lat = 85 - point.y * 1.7;
-  const lng = point.x * 3.6 - 180;
-  return [lat, lng];
+  if (Number.isFinite(point?.lat) && Number.isFinite(point?.lng)) {
+    return [point.lat, point.lng];
+  }
+  return pointGridToLatLng(point);
+}
+
+function shortestLngDelta(fromLng, toLng) {
+  let delta = toLng - fromLng;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+  return delta;
+}
+
+function normalizeLng(lng) {
+  let value = lng;
+  while (value > 180) value -= 360;
+  while (value < -180) value += 360;
+  return value;
+}
+
+function routeLatLngs(from, to) {
+  const [fromLat, fromLng] = pointToLatLng(from);
+  const [toLat, toLng] = pointToLatLng(to);
+  const delta = shortestLngDelta(fromLng, toLng);
+  return [
+    [fromLat, fromLng],
+    [toLat, fromLng + delta],
+  ];
 }
 
 function interpolatePoint(from, to, progress) {
+  const [fromLat, fromLng] = pointToLatLng(from);
+  const [toLat, toLng] = pointToLatLng(to);
+  const deltaLng = shortestLngDelta(fromLng, toLng);
   return {
-    x: from.x + (to.x - from.x) * progress,
-    y: from.y + (to.y - from.y) * progress,
+    lat: fromLat + (toLat - fromLat) * progress,
+    lng: normalizeLng(fromLng + deltaLng * progress),
   };
 }
 
 function headingDegrees(from, to) {
-  return (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI + 90;
+  const [fromLat, fromLng] = pointToLatLng(from);
+  const [toLat, toLng] = pointToLatLng(to);
+  const dy = fromLat - toLat;
+  const dx = shortestLngDelta(fromLng, toLng);
+  return (Math.atan2(dy, dx) * 180) / Math.PI + 90;
 }
 
+const MAP_TICK_MS = 120;
+const MAP_TICK_SECONDS = MAP_TICK_MS / 1000;
+
 function planeIcon(risco, selected, angle) {
-  const svgPlane = `
-    <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(${angle}deg);">
-      <path d="M2 12 L22 6 L18 12 L22 18 L2 12 Z" fill="#0e3a5a" opacity="0.95" />
-    </svg>`;
+  const svgPlane = `<span class="plane-glyph" style="transform: rotate(${angle}deg);">✈</span>`;
   return L.divIcon({
     className: 'plane-icon-wrapper',
     html: `<div class="plane-pin ${risco} ${selected ? 'selected' : ''}">${svgPlane}</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
   });
 }
 
@@ -439,8 +636,21 @@ function riscoLabel(risco) {
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [mapBusca, setMapBusca] = useState('');
   const [mapStatus, setMapStatus] = useState('todos');
+  const [mapEscopo, setMapEscopo] = useState('todos');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'assistant', content: 'Posso responder sobre o site e sobre voos. Exemplo: "quais voos estao atrasados?"', meta: null },
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatSending, setChatSending] = useState(false);
+  const [chatMode, setChatMode] = useState('executivo');
+  const [chatLimit, setChatLimit] = useState(10);
+  const [chatPage, setChatPage] = useState(1);
+  const [lastChatRequest, setLastChatRequest] = useState(null);
+  const [chatUseLLM, setChatUseLLM] = useState(true);
   const mapRootRef = useRef(null);
-  const leafletRef = useRef({ map: null, markers: new Map(), routes: new Map(), base: null });
+  const leafletRef = useRef({ map: null, markers: new Map(), routes: new Map(), base: null, airportsLayer: null });
 
   const visiveis = useMemo(() => {
     const q = buscaGlobal.toLowerCase().trim();
@@ -459,13 +669,16 @@ function riscoLabel(risco) {
     const q = mapBusca.toLowerCase().trim();
     return mapFlights.filter((f) => {
       if (mapStatus !== 'todos' && f.risco !== mapStatus) return false;
+      const isNacional = String(f.regiao || '').toLowerCase().includes('nacional');
+      if (mapEscopo === 'nacional' && !isNacional) return false;
+      if (mapEscopo === 'internacional' && isNacional) return false;
       if (!q) return true;
       const texto = [f.id, f.cia, f.from.code, f.to.code, f.from.city, f.to.city, f.aeronave, f.portao, f.horario]
         .join(' ')
         .toLowerCase();
       return texto.includes(q);
     });
-  }, [mapFlights, mapBusca, mapStatus]);
+  }, [mapFlights, mapBusca, mapStatus, mapEscopo]);
 
   const mapResumo = useMemo(() => ({
     operando: mapFlights.filter((f) => f.risco === 'operando').length,
@@ -473,70 +686,125 @@ function riscoLabel(risco) {
     atraso: mapFlights.filter((f) => f.risco === 'atraso').length,
   }), [mapFlights]);
 
+  function goSection(section) {
+    setActiveSection(section);
+    setMenuOpen(false);
+  }
+
   useEffect(() => {
-    let rafId = 0;
-    let prevTime = performance.now();
-    let acc = 0;
+    const timer = setInterval(() => {
+      setMapFlights((prev) =>
+        prev.map((f) => {
+          let progress = f.progress + f.speed * MAP_TICK_SECONDS;
+          if (progress > 1) progress -= 1;
+          return { ...f, progress };
+        })
+      );
+    }, MAP_TICK_MS);
 
-    const tick = (now) => {
-      const dt = Math.min(0.06, (now - prevTime) / 1000);
-      prevTime = now;
-      acc += dt * 1000; // ms
-
-      // update internal positions every frame but only set React state every 80ms
-      mapFlights.forEach((f) => {
-        f.progress = f.progress + f.speed * dt;
-        if (f.progress > 1) f.progress -= 1;
-      });
-
-      if (acc >= 100) {
-        // shallow copy to trigger render
-        setMapFlights((prev) => prev.map((f) => ({ ...f })));
-        acc = 0;
-      }
-
-      rafId = requestAnimationFrame(tick);
-    };
-
-    rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
+    return () => clearInterval(timer);
   }, []);
   useEffect(() => {
-    if (activeSection !== 'dashboard' || privacyMode || !mapRootRef.current) return;
+    if (activeSection !== 'dashboard' || privacyMode) return;
 
+    let retryTimer = null;
+    let cancelled = false;
+
+      const tryInit = () => {
+        if (cancelled) return;
+        const container = mapRootRef.current;
+      if (!container || container.offsetWidth === 0 || container.offsetHeight === 0) {
+        retryTimer = setTimeout(tryInit, 150);
+        return;
+      }
+
+      const ctx = leafletRef.current;
+      if (ctx.map) {
+        requestAnimationFrame(() => ctx.map.invalidateSize());
+        return;
+      }
+
+      const map = L.map(container, {
+        center: [12, -20],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 6,
+        zoomControl: true,
+        worldCopyJump: true,
+        attributionControl: true,
+        preferCanvas: true,
+      });
+
+      const tile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+      }).addTo(map);
+      let fallbackApplied = false;
+      tile.on('tileerror', () => {
+        if (fallbackApplied) return;
+        fallbackApplied = true;
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap',
+        }).addTo(map);
+      });
+      const forceResize = () => {
+        requestAnimationFrame(() => map.invalidateSize(true));
+        setTimeout(() => map.invalidateSize(true), 120);
+      };
+      tile.on('load', forceResize);
+      map.whenReady(forceResize);
+
+      ctx.map = map;
+      ctx.base = L.circleMarker([-23.4356, -46.4731], {
+        radius: 6,
+        color: '#0f7b47',
+        fillColor: '#22c55e',
+        fillOpacity: 0.9,
+        weight: 1,
+      }).addTo(map);
+      ctx.base.bindTooltip('GRU - Aeroporto Base', { direction: 'top', offset: [0, -6] });
+
+      const airportsLayer = L.layerGroup();
+      MAP_AIRPORT_POINTS.forEach((airport) => {
+        const mk = L.circleMarker([airport.lat, airport.lng], {
+          radius: 4,
+          color: '#0f7b47',
+          fillColor: '#22c55e',
+          fillOpacity: 0.9,
+          weight: 1,
+        });
+        const region = airport.state && airport.state !== '-' ? `${airport.state}, ${airport.country}` : airport.country;
+        mk.bindTooltip(`${airport.code} - ${airport.city} (${region})`, { direction: 'top', offset: [0, -6] });
+        mk.addTo(airportsLayer);
+      });
+      airportsLayer.addTo(map);
+      ctx.airportsLayer = airportsLayer;
+
+      // ensure the map resizes once container is rendered
+      forceResize();
+    };
+
+    tryInit();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [activeSection, privacyMode]);
+
+  useEffect(() => {
+    if (activeSection === 'dashboard' && !privacyMode) return;
     const ctx = leafletRef.current;
     if (ctx.map) {
-      requestAnimationFrame(() => ctx.map.invalidateSize());
-      return;
+      ctx.map.remove();
+      ctx.map = null;
+      ctx.markers.clear();
+      ctx.routes.clear();
+      ctx.base = null;
+      ctx.airportsLayer = null;
     }
-
-    const map = L.map(mapRootRef.current, {
-      center: [12, -20],
-      zoom: 2,
-      minZoom: 2,
-      maxZoom: 6,
-      zoomControl: true,
-      worldCopyJump: true,
-      attributionControl: true,
-    });
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-    }).addTo(map);
-
-    ctx.map = map;
-    ctx.base = L.circleMarker([-23.4356, -46.4731], {
-      radius: 6,
-      color: '#0f7b47',
-      fillColor: '#22c55e',
-      fillOpacity: 0.9,
-      weight: 1,
-    }).addTo(map);
-    ctx.base.bindTooltip('GRU - Aeroporto Base', { direction: 'top', offset: [0, -6] });
-
-    requestAnimationFrame(() => map.invalidateSize());
   }, [activeSection, privacyMode]);
 
   useEffect(() => {
@@ -552,12 +820,11 @@ function riscoLabel(risco) {
 
     const visible = new Set(mapFiltrados.map((f) => f.id));
     mapFiltrados.forEach((f) => {
-      const start = pointToLatLng(f.from);
-      const end = pointToLatLng(f.to);
+      const [start, end] = routeLatLngs(f.from, f.to);
       const current = pointToLatLng(interpolatePoint(f.from, f.to, f.progress));
       const selected = selectedFlightId === f.id;
       const angle = headingDegrees(f.from, f.to);
-      const color = f.risco === 'atraso' ? '#ff8f8f' : f.risco === 'atencao' ? '#ffd45f' : '#ffe083';
+      const color = f.risco === 'atraso' ? '#ff8f8f' : f.risco === 'atencao' ? '#ffd45f' : '#7bb9ff';
 
       if (!ctx.routes.has(f.id)) {
         ctx.routes.set(
@@ -586,14 +853,47 @@ function riscoLabel(risco) {
           keyboard: false,
         });
         mk.addTo(map);
+        mk.__iconSig = `${f.risco}|${selected ? '1' : '0'}|${Math.round(angle)}`;
+        const el = mk.getElement();
+        if (el) {
+          el.style.transition = `transform ${MAP_TICK_MS + 40}ms linear`;
+        }
         mk.on('click', async () => {
-          mk.bindPopup(`<strong>${f.id}</strong><br/>${f.cia} · ${f.from.code} → ${f.to.code}<br/>${Math.round(f.progress * 100)}%`).openPopup();
+          const initialHtml = `
+            <div style="min-width:200px">
+              <strong>${f.id}</strong><br/>
+              ${f.cia} · ${f.from.code} → ${f.to.code}<br/>
+              <small>${f.aeronave || ''}</small><br/>
+              <div>Portão: ${f.portao || '-' } · Velocidade: ${f.velocidade || '-'}</div>
+              <div style="margin-top:6px">Progresso: ${Math.round(f.progress * 100)}%</div>
+              <div class="popup-risco">Carregando risco...</div>
+            </div>`;
+          mk.bindPopup(initialHtml).openPopup();
           setSelectedFlightId(f.id);
           // set minimal data immediately for snappy UI and mark loading
           setSelectedFlightData({ ...f, riscoInfo: null, riscoLoading: true });
           // fetch probability from API
           const risco = await fetchRisco(f.id, 'tradicional');
           setSelectedFlightData((prev) => prev ? { ...prev, riscoInfo: risco, riscoLoading: false } : null);
+          // update popup content with risco when available
+          try {
+            const popup = mk.getPopup && mk.getPopup();
+            if (popup && risco) {
+              const newHtml = `
+                <div style="min-width:200px">
+                  <strong>${f.id}</strong><br/>
+                  ${f.cia} · ${f.from.code} → ${f.to.code}<br/>
+                  <small>${f.aeronave || ''}</small><br/>
+                  <div>Portão: ${f.portao || '-'} · Velocidade: ${f.velocidade || '-'}</div>
+                  <div style="margin-top:6px">Probabilidade de atraso: <strong>${risco.percent ?? '-'}%</strong>
+                    ${risco.label ? `<span> — ${risco.label}</span>` : ''}
+                  </div>
+                </div>`;
+              popup.setContent(newHtml);
+            }
+          } catch (e) {
+            // ignore popup update errors
+          }
         });
         mk.bindTooltip('', { direction: 'top', offset: [0, -12], opacity: 0.92 });
         ctx.markers.set(f.id, mk);
@@ -601,9 +901,19 @@ function riscoLabel(risco) {
 
       const marker = ctx.markers.get(f.id);
       marker.setLatLng(current);
-      marker.setIcon(planeIcon(f.risco, selected, angle));
+      const nextIconSig = `${f.risco}|${selected ? '1' : '0'}|${Math.round(angle)}`;
+      if (marker.__iconSig !== nextIconSig) {
+        marker.setIcon(planeIcon(f.risco, selected, angle));
+        marker.__iconSig = nextIconSig;
+      }
       marker.setTooltipContent(`${f.id} (${f.cia}) | ${f.from.code} -> ${f.to.code} | ${Math.round(f.progress * 100)}%`);
-      marker.getElement()?.style.setProperty('--pin-color', color);
+      const mel = marker.getElement();
+      if (mel) {
+        // keep smooth movement via transform transition
+        mel.style.transition = `transform ${MAP_TICK_MS + 40}ms linear`;
+        mel.style.willChange = 'transform';
+        mel.style.color = color;
+      }
     });
 
     [...ctx.markers.keys()].forEach((id) => {
@@ -631,6 +941,7 @@ function riscoLabel(risco) {
       ctx.markers.clear();
       ctx.routes.clear();
       ctx.base = null;
+      ctx.airportsLayer = null;
     }
   }, []);
 
@@ -704,6 +1015,72 @@ function riscoLabel(risco) {
     }
   }
 
+  async function enviarPerguntaIA(e, opts = {}) {
+    if (e?.preventDefault) e.preventDefault();
+    const pergunta = (opts.pergunta ?? chatInput).trim();
+    const page = Number(opts.page ?? 1);
+    if (!pergunta || chatSending) return;
+
+    if (!opts.keepInput) setChatInput('');
+    setChatSending(true);
+    if (!opts.silentUserEcho) {
+      setChatMessages((prev) => [...prev, { role: 'user', content: pergunta, meta: null }]);
+    }
+
+    try {
+      const historico = chatMessages.slice(-8);
+      const voosContexto = mapFlights.map((v) => ({
+        numero_voo: v.id,
+        companhia: v.cia,
+        horario_previsto: v.atualizado || null,
+        status: v.risco === 'atraso' ? 'ATRASADO' : v.risco === 'atencao' ? 'EM_VOO' : 'PREVISTO',
+        preco_medio: 0,
+        origem_cidade: v.from?.city || '',
+        origem_estado: '',
+        destino_cidade: v.to?.city || '',
+        destino_estado: '',
+      }));
+      const resp = await api.post('/ia/chat', {
+        pergunta,
+        historico,
+        voosContexto,
+        modo: chatMode,
+        page,
+        limit: chatLimit,
+        usarLLM: chatUseLLM,
+      });
+      const texto = resp?.data?.resposta || 'Nao consegui responder no momento.';
+      const meta = {
+        topico: resp?.data?.topico || null,
+        confianca: resp?.data?.confianca || null,
+        sugestoes: Array.isArray(resp?.data?.sugestoes) ? resp.data.sugestoes : [],
+        paginacao: resp?.data?.paginacao || null,
+        source: resp?.data?.source || null,
+        provider: resp?.data?.provider || null,
+        model: resp?.data?.model || null,
+      };
+      setLastChatRequest({ pergunta, page, limit: chatLimit, modo: chatMode, meta });
+      setChatPage(page);
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: texto, meta }]);
+    } catch (err) {
+      const msg = err?.response?.data?.error || 'Falha ao consultar a IA.';
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: `Erro: ${msg}`, meta: null }]);
+    } finally {
+      setChatSending(false);
+    }
+  }
+
+  function pedirProximaPagina() {
+    if (!lastChatRequest?.meta?.paginacao?.hasNext) return;
+    const nextPage = Number(lastChatRequest.meta.paginacao.page || 1) + 1;
+    enviarPerguntaIA(null, {
+      pergunta: lastChatRequest.pergunta,
+      page: nextPage,
+      silentUserEcho: true,
+      keepInput: true,
+    });
+  }
+
   if (!token) {
     const bloqueadoPorCookie = cookieStatus !== 'aceito' && cookieStatus !== 'recusado';
     return (
@@ -772,42 +1149,63 @@ function riscoLabel(risco) {
 
   return (
     <div className="layout">
-      <aside className="sidebar">
-        <button className={`nav-btn ${activeSection === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveSection('dashboard')}>
+      <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
+        <button className={`nav-btn ${activeSection === 'dashboard' ? 'active' : ''}`} onClick={() => goSection('dashboard')}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 10h18v6H3z" stroke="#9fbef8" strokeWidth="1.2" fill="#0d2a4a"/></svg>Dashboard
         </button>
-        <button className={`nav-btn ${activeSection === 'voos' ? 'active' : ''}`} onClick={() => setActiveSection('voos')}>
+        <button className={`nav-btn ${activeSection === 'voos' ? 'active' : ''}`} onClick={() => goSection('voos')}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2l3 7h6l-5 4 2 7-6-4-6 4 2-7-5-4h6z" stroke="#9fbef8" strokeWidth="0.8"/></svg>Voos
         </button>
-        <button className={`nav-btn ${activeSection === 'aeronaves' ? 'active' : ''}`} onClick={() => setActiveSection('aeronaves')}>
+        <button className={`nav-btn ${activeSection === 'aeronaves' ? 'active' : ''}`} onClick={() => goSection('aeronaves')}>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3" stroke="#9fbef8" strokeWidth="0.9"/><path d="M4 20c4-4 8-4 16 0" stroke="#9fbef8" strokeWidth="0.9"/></svg>Aeronaves
         </button>
-        <button className={`nav-btn ${activeSection === 'relatorios' ? 'active' : ''}`} onClick={() => setActiveSection('relatorios')}>
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="16" height="16" rx="2" stroke="#9fbef8" strokeWidth="0.9"/></svg>Relatorios
+        <button className={`nav-btn ${activeSection === 'relatorios' ? 'active' : ''}`} onClick={() => goSection('relatorios')}>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="16" height="16" rx="2" stroke="#9fbef8" strokeWidth="0.9"/></svg>Relatórios
         </button>
-        <button className={`nav-btn ${activeSection === 'configuracoes' ? 'active' : ''}`} onClick={() => setActiveSection('configuracoes')}>
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="#9fbef8" strokeWidth="0.9"/><path d="M19.4 15a1.5 1.5 0 0 0 0-1.8l1.3-1a.6.6 0 0 0 0-1l-1.3-1a1.5 1.5 0 0 0-1.8 0l-1-.6a.6.6 0 0 0-.6 0l-1 .6a1.5 1.5 0 0 0-1.8 0l-1.3-1a.6.6 0 0 0-1 0l-1.3 1a1.5 1.5 0 0 0 0 1.8l-1 .6a.6.6 0 0 0 0 .6l1 .6a1.5 1.5 0 0 0 0 1.8l-1.3 1a.6.6 0 0 0 0 1l1.3 1a1.5 1.5 0 0 0 1.8 0l1 .6a.6.6 0 0 0 .6 0l1-.6a1.5 1.5 0 0 0 1.8 0l1.3 1a.6.6 0 0 0 1 0l1.3-1a1.5 1.5 0 0 0 0-1.8l1-.6a.6.6 0 0 0 0-.6z" stroke="#9fbef8" strokeWidth="0.6"/></svg>Configuracoes
+        <button className={`nav-btn ${activeSection === 'configuracoes' ? 'active' : ''}`} onClick={() => goSection('configuracoes')}>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="#9fbef8" strokeWidth="0.9"/><path d="M19.4 15a1.5 1.5 0 0 0 0-1.8l1.3-1a.6.6 0 0 0 0-1l-1.3-1a1.5 1.5 0 0 0-1.8 0l-1-.6a.6.6 0 0 0-.6 0l-1 .6a1.5 1.5 0 0 0-1.8 0l-1.3-1a.6.6 0 0 0-1 0l-1.3 1a1.5 1.5 0 0 0 0 1.8l-1 .6a.6.6 0 0 0 0 .6l1 .6a1.5 1.5 0 0 0 0 1.8l-1.3 1a.6.6 0 0 0 0 1l1.3 1a1.5 1.5 0 0 0 1.8 0l1 .6a.6.6 0 0 0 .6 0l1-.6a1.5 1.5 0 0 0 1.8 0l1.3 1a.6.6 0 0 0 1 0l1.3-1a1.5 1.5 0 0 0 0-1.8l1-.6a.6.6 0 0 0 0-.6z" stroke="#9fbef8" strokeWidth="0.6"/></svg>Configurações
         </button>
       </aside>
+      {menuOpen && <button className="sidebar-backdrop" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
 
       <div className="main">
         <header className="header">
-                <img
-                className="app-logo"
-                src="/skytrak-logo-transparent.png"
-                alt="SkyTrak"
-                onError={(e) => {
-                  const cur = e.currentTarget;
-                  if (!cur.src.includes('skytrak-logo.png')) cur.src = '/skytrak-logo.png';
-                }}
-              />
-          <input
-            className="global-search"
-            placeholder="Buscar voos, aeronaves, portoes..."
-            value={buscaGlobal}
-            onChange={(e) => setBuscaGlobal(e.target.value)}
-          />
+          <div className="header-left">
+            <button className={`menu-toggle ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen((v) => !v)} aria-label="Abrir menu">
+              <span />
+              <span />
+              <span />
+            </button>
+            <img
+              className="app-logo"
+              src="/skytrak-logo-transparent.png"
+              alt="SkyTrak"
+              onError={(e) => {
+                const cur = e.currentTarget;
+                if (!cur.src.includes('skytrak-logo.png')) cur.src = '/skytrak-logo.png';
+              }}
+            />
+          </div>
+          <label className="global-search-wrap" aria-label="Busca global">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
+              <path d="M20 20L16.65 16.65" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            </svg>
+            <input
+              className="global-search"
+              placeholder="Buscar voos, aeronaves, portões..."
+              value={buscaGlobal}
+              onChange={(e) => setBuscaGlobal(e.target.value)}
+            />
+          </label>
           <div className="header-actions">
+            <button className={`ai-toggle ${aiOpen ? 'on' : ''}`} onClick={() => setAiOpen((v) => !v)} aria-label="Abrir IA">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="6" y="5" width="12" height="10" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M9 10h.01M15 10h.01M8.5 18h7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                <path d="M12 5V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
             <span className="who">{me?.nome || 'Operador'} ({me?.perfil || 'OPERADOR'})</span>
             <button className={`privacy-toggle ${privacyMode ? 'on' : ''}`} onClick={() => setPrivacyMode((v) => !v)}>
               Modo Privacidade {privacyMode ? 'ON' : 'OFF'}
@@ -815,6 +1213,58 @@ function riscoLabel(risco) {
             <button className="btn ghost" onClick={sair}>Sair</button>
           </div>
         </header>
+        {aiOpen && (
+          <aside className="ai-drawer">
+            <div className="ai-drawer-head">
+              <h3>Assistente IA</h3>
+              <button className="btn ghost small" onClick={() => setAiOpen(false)}>Fechar</button>
+            </div>
+            <div className="chat-body">
+              {chatMessages.map((m, idx) => (
+                <p key={`drawer-${idx}`}>
+                  <strong>{m.role === 'assistant' ? 'IA' : 'Voce'}:</strong> {m.content}
+                  {m.role === 'assistant' && m.meta?.confianca ? <span className="chat-meta"> · Confianca: {m.meta.confianca}</span> : null}
+                  {m.role === 'assistant' && m.meta?.source ? <span className="chat-meta"> · Fonte: {m.meta.source === 'llm' ? `${m.meta.provider || 'LLM'}${m.meta.model ? ` (${m.meta.model})` : ''}` : 'fallback local'}</span> : null}
+                </p>
+              ))}
+            </div>
+            <div className="chat-controls">
+              <select value={chatMode} onChange={(e) => setChatMode(e.target.value)} disabled={chatSending}>
+                <option value="executivo">Modo executivo</option>
+                <option value="tecnico">Modo tecnico</option>
+              </select>
+              <select value={chatLimit} onChange={(e) => setChatLimit(Number(e.target.value))} disabled={chatSending}>
+                <option value={5}>5 itens</option>
+                <option value={10}>10 itens</option>
+                <option value={15}>15 itens</option>
+                <option value={20}>20 itens</option>
+              </select>
+              <label className="chat-toggle">
+                <input type="checkbox" checked={chatUseLLM} onChange={(e) => setChatUseLLM(e.target.checked)} disabled={chatSending} />
+                Usar LLM
+              </label>
+              <button
+                className="btn ghost small"
+                type="button"
+                onClick={pedirProximaPagina}
+                disabled={chatSending || !lastChatRequest?.meta?.paginacao?.hasNext}
+              >
+                Proxima pagina
+              </button>
+            </div>
+            <form className="chat-form" onSubmit={enviarPerguntaIA}>
+              <input
+                placeholder="Pergunte sobre o site ou voos..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                disabled={chatSending}
+              />
+              <button className="btn primary small" type="submit" disabled={chatSending || !chatInput.trim()}>
+                {chatSending ? 'Enviando...' : 'Enviar'}
+              </button>
+            </form>
+          </aside>
+        )}
 
         {activeSection === 'dashboard' && (
           <section className="section">
@@ -830,7 +1280,7 @@ function riscoLabel(risco) {
               <div className="map-head">
                 <div>
                   <h3>Mapa de rotas ao vivo</h3>
-                  <span>{mapFiltrados.length} voos visiveis</span>
+                  <span>{mapFiltrados.length} voos visíveis</span>
                 </div>
                 <button className="btn ghost small" onClick={() => setMapFullscreen((v) => !v)}>
                   {mapFullscreen ? 'Minimizar' : 'Maximizar'}
@@ -838,7 +1288,7 @@ function riscoLabel(risco) {
               </div>
 
               {privacyMode ? (
-                <div className="map-privacy-lock">Modo privacidade ativo: mapa ocultado por seguranca.</div>
+                <div className="map-privacy-lock">Modo privacidade ativo: mapa ocultado por segurança.</div>
               ) : (
                 <div className="map-stage">
                   <div className="map-toolbar">
@@ -850,12 +1300,15 @@ function riscoLabel(risco) {
                       </div>
                     </div>
                     <div className="map-search-wrap">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
+                        <path d="M20 20L16.65 16.65" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                      </svg>
                       <input
                         value={mapBusca}
                         onChange={(e) => setMapBusca(e.target.value)}
                         placeholder="Pesquisar voo, companhia ou aeroporto"
                       />
-                      <button type="button">Filtrar</button>
                     </div>
                     <div className="map-count-card">
                       <strong>{mapFiltrados.length}</strong>
@@ -866,15 +1319,20 @@ function riscoLabel(risco) {
                   <div className="status-filters">
                     <button className={`status-chip ${mapStatus === 'todos' ? 'active' : ''}`} onClick={() => setMapStatus('todos')}>Todos</button>
                     <button className={`status-chip operando ${mapStatus === 'operando' ? 'active' : ''}`} onClick={() => setMapStatus('operando')}>Operando {mapResumo.operando}</button>
-                    <button className={`status-chip atencao ${mapStatus === 'atencao' ? 'active' : ''}`} onClick={() => setMapStatus('atencao')}>Atencao {mapResumo.atencao}</button>
+                    <button className={`status-chip atencao ${mapStatus === 'atencao' ? 'active' : ''}`} onClick={() => setMapStatus('atencao')}>Atenção {mapResumo.atencao}</button>
                     <button className={`status-chip atraso ${mapStatus === 'atraso' ? 'active' : ''}`} onClick={() => setMapStatus('atraso')}>Atraso {mapResumo.atraso}</button>
+                  </div>
+                  <div className="scope-filters">
+                    <button className={`scope-chip ${mapEscopo === 'todos' ? 'active' : ''}`} onClick={() => setMapEscopo('todos')}>Todos os voos</button>
+                    <button className={`scope-chip ${mapEscopo === 'nacional' ? 'active' : ''}`} onClick={() => setMapEscopo('nacional')}>Nacionais</button>
+                    <button className={`scope-chip ${mapEscopo === 'internacional' ? 'active' : ''}`} onClick={() => setMapEscopo('internacional')}>Internacionais</button>
                   </div>
 
                   <div ref={mapRootRef} className="leaflet-map" />
 
                   <div className="map-legend-row">
                     <span><i className="legend-dot active" /> Operando</span>
-                    <span><i className="legend-dot attention" /> Atencao</span>
+                    <span><i className="legend-dot attention" /> Atenção</span>
                     <span><i className="legend-dot danger" /> Atraso</span>
                     <span><i className="legend-dot base" /> Aeroporto Base</span>
                   </div>
@@ -885,9 +1343,9 @@ function riscoLabel(risco) {
             <div className="panel">
               <div className="panel-head">
                 <h3>Probabilidade de Atrasos Operacionais</h3>
-                <span className="chip warn">Atencao: Pico as 17:00</span>
+                <span className="chip warn">Atenção: Pico às 17:00</span>
               </div>
-              <p className="chart-subtitle">Previsao para as proximas 4 horas</p>
+              <p className="chart-subtitle">Previsão para as próximas 4 horas</p>
               <div className="prob-chart">
                 <div className="prob-axis">
                   <span>80</span>
@@ -939,12 +1397,50 @@ function riscoLabel(risco) {
               </div>
               <aside className="panel chat">
                 <h3>Chat IA Generativa</h3>
-                <div className="chat-body">
-                  <p><strong>IA:</strong> Posso analisar risco por companhia, rota e janela de portao.</p>
-                  <p><strong>Operador:</strong> Quais voos com risco alto nas proximas 4 horas?</p>
-                  <p><strong>IA:</strong> G31847 e UA0834 com atraso provavel. Recomendo realocacao de gate.</p>
-                </div>
-                <input placeholder="Digite uma pergunta operacional..." />
+            <div className="chat-body">
+              {chatMessages.map((m, idx) => (
+                <p key={`panel-${idx}`}>
+                  <strong>{m.role === 'assistant' ? 'IA' : 'Voce'}:</strong> {m.content}
+                  {m.role === 'assistant' && m.meta?.confianca ? <span className="chat-meta"> · Confianca: {m.meta.confianca}</span> : null}
+                  {m.role === 'assistant' && m.meta?.source ? <span className="chat-meta"> · Fonte: {m.meta.source === 'llm' ? `${m.meta.provider || 'LLM'}${m.meta.model ? ` (${m.meta.model})` : ''}` : 'fallback local'}</span> : null}
+                </p>
+              ))}
+            </div>
+            <div className="chat-controls">
+              <select value={chatMode} onChange={(e) => setChatMode(e.target.value)} disabled={chatSending}>
+                <option value="executivo">Modo executivo</option>
+                <option value="tecnico">Modo tecnico</option>
+              </select>
+              <select value={chatLimit} onChange={(e) => setChatLimit(Number(e.target.value))} disabled={chatSending}>
+                <option value={5}>5 itens</option>
+                <option value={10}>10 itens</option>
+                <option value={15}>15 itens</option>
+                <option value={20}>20 itens</option>
+              </select>
+              <label className="chat-toggle">
+                <input type="checkbox" checked={chatUseLLM} onChange={(e) => setChatUseLLM(e.target.checked)} disabled={chatSending} />
+                Usar LLM
+              </label>
+              <button
+                className="btn ghost small"
+                type="button"
+                onClick={pedirProximaPagina}
+                disabled={chatSending || !lastChatRequest?.meta?.paginacao?.hasNext}
+              >
+                Proxima pagina
+              </button>
+            </div>
+            <form className="chat-form" onSubmit={enviarPerguntaIA}>
+              <input
+                placeholder="Pergunte sobre o site ou voos..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    disabled={chatSending}
+                  />
+                  <button className="btn primary small" type="submit" disabled={chatSending || !chatInput.trim()}>
+                    {chatSending ? 'Enviando...' : 'Enviar'}
+                  </button>
+                </form>
               </aside>
             </div>
           </section>
@@ -952,8 +1448,8 @@ function riscoLabel(risco) {
 
         {activeSection === 'voos' && (
           <section className="section">
-            <h2>Gestao de Voos</h2>
-            <p>Visualizacao completa de todos os voos</p>
+            <h2>Gestão de Voos</h2>
+            <p>Visualização completa de todos os voos</p>
             <div className="panel">
               <table className="table">
                 <thead><tr><th>Companhia</th><th>Voo</th><th>Destino</th><th>Horario</th><th>Portao</th><th>Status</th></tr></thead>
@@ -976,7 +1472,7 @@ function riscoLabel(risco) {
 
         {activeSection === 'aeronaves' && (
           <section className="section">
-            <h2>Gestao de Aeronaves</h2>
+            <h2>Gestão de Aeronaves</h2>
             <div className="cards-grid">
               {MOCK_AERONAVES.map((a) => (
                 <article className="aircraft-card" key={a.id}>
@@ -995,7 +1491,7 @@ function riscoLabel(risco) {
 
         {activeSection === 'relatorios' && (
           <section className="section">
-            <h2>Relatorios</h2>
+            <h2>Relatórios</h2>
             <div className="panel lgpd-banner">
               <strong>Conformidade LGPD Ativa</strong>
               <p>Todos os relatórios seguem anonimização de dados pessoais e retenção controlada.</p>
@@ -1028,7 +1524,7 @@ function riscoLabel(risco) {
 
         {activeSection === 'configuracoes' && (
           <section className="section">
-            <h2>Configuracoes</h2>
+            <h2>Configurações</h2>
             <div className="settings-grid">
               <div className="panel">
                 <h3>Perfil do Usuario</h3>
@@ -1096,9 +1592,6 @@ function riscoLabel(risco) {
                           <path d="M2 12 L22 6 L18 12 L22 18 L2 12 Z" fill="#98c3ff" />
                         </svg>
                       </div>
-                                    <button className="close-modal" onClick={closeModal} aria-label="Fechar">
-                                      <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M6 6 L18 18 M18 6 L6 18" stroke="#96afda" strokeWidth="1.6" strokeLinecap="round"/></svg>
-                                    </button>
                       <div className="progress-line">
                         <i style={{ width: `${Math.round(displayedFlight.progress * 100)}%` }} />
                       </div>
@@ -1174,12 +1667,3 @@ function riscoLabel(risco) {
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
