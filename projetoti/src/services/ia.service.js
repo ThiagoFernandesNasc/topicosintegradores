@@ -134,21 +134,21 @@ function montarRespostaEstruturada({ modo, resumo, dados, acao, proxima, confian
   const conf = confianca[0].toUpperCase() + confianca.slice(1);
   if (modo === 'tecnico') {
     const paginaTxt = paginacao
-      ? `\nPagina: ${paginacao.page}/${paginacao.totalPages} (itens por pagina: ${paginacao.limit}, total: ${paginacao.total})`
+      ? `\nPágina: ${paginacao.page}/${paginacao.totalPages} (itens por página: ${paginacao.limit}, total: ${paginacao.total})`
       : '';
     return [
       `Resumo: ${resumo}`,
       `Dados principais: ${dados}`,
-      `Acao sugerida: ${acao}`,
-      `Proxima pergunta util: ${proxima}`,
-      `Confianca: ${conf}${paginaTxt}`,
+      `Ação sugerida: ${acao}`,
+      `Próxima pergunta útil: ${proxima}`,
+      `Confiança: ${conf}${paginaTxt}`,
     ].join('\n\n');
   }
 
   const paginaExec = paginacao
-    ? ` | Pagina ${paginacao.page}/${paginacao.totalPages}`
+    ? ` | Página ${paginacao.page}/${paginacao.totalPages}`
     : '';
-  return `Resumo: ${resumo}\nDados: ${dados}\nAcao: ${acao}\nProxima: ${proxima}\nConfianca: ${conf}${paginaExec}`;
+  return `Resumo: ${resumo}\nDados: ${dados}\nAção: ${acao}\nPróxima: ${proxima}\nConfiança: ${conf}${paginaExec}`;
 }
 
 function classificarIntencao(q, voos) {
@@ -177,10 +177,10 @@ function montarPerguntaComHistorico(pergunta, historico) {
 
 function montarContextoSite() {
   return {
-    resumo: 'Voce pode acompanhar operacao e risco de voos em tempo real.',
-    dados: 'Secoes: Dashboard, Voos, Aeronaves, Relatorios e Configuracoes. No mapa: filtros por status, nacional/internacional, busca e detalhes por voo.',
-    acao: 'Abra o Dashboard e use os chips de filtro para recortar o cenario operacional.',
-    proxima: 'Deseja que eu explique um fluxo rapido de uso em 3 passos?',
+    resumo: 'Você pode acompanhar operação e risco de voos em tempo real.',
+    dados: 'Seções: Dashboard, Voos, Aeronaves, Relatórios e Configurações. No mapa: filtros por status, nacional/internacional, busca e detalhes por voo.',
+    acao: 'Abra o Dashboard e use os chips de filtro para recortar o cenário operacional.',
+    proxima: 'Deseja que eu explique um fluxo rápido de uso em 3 passos?',
   };
 }
 
@@ -191,8 +191,8 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     return {
       body: {
         resumo: 'Eu consigo responder perguntas operacionais e de uso do sistema.',
-        dados: 'Consultas: resumo geral, atrasos, cancelados, proximos voos, voo por numero, voos por companhia, aeroportos mais movimentados e filtros do mapa.',
-        acao: 'Pergunte por exemplo: "quais voos estao atrasados?" ou "status do voo LA1234".',
+        dados: 'Consultas: resumo geral, atrasos, cancelados, próximos voos, voo por número, voos por companhia, aeroportos mais movimentados e filtros do mapa.',
+        acao: 'Pergunte por exemplo: "quais voos estão atrasados?" ou "status do voo LA1234".',
         proxima: 'Quer um menu de perguntas prontas?',
       },
       score: 0.95,
@@ -214,9 +214,9 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     if (!voo) {
       return {
         body: {
-          resumo: `Nao encontrei o voo ${numero}.`,
-          dados: `Total de voos disponiveis para consulta: ${voos.length}.`,
-          acao: 'Confirme o numero do voo (ex.: LA1234) ou pergunte por companhia.',
+          resumo: `Não encontrei o voo ${numero}.`,
+          dados: `Total de voos disponíveis para consulta: ${voos.length}.`,
+          acao: 'Confirme o número do voo (ex.: LA1234) ou pergunte por companhia.',
           proxima: 'Quer que eu liste voos por companhia?',
         },
         score: 0.78,
@@ -227,8 +227,8 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     return {
       body: {
         resumo: `Voo ${voo.numero_voo} identificado com status ${voo.status}.`,
-        dados: `${voo.companhia} | ${voo.origem_cidade}/${voo.origem_estado} -> ${voo.destino_cidade}/${voo.destino_estado} | Horario: ${formatarDataHora(voo.horario_previsto)} | Risco: ${risco.percent}% (${risco.label}).`,
-        acao: 'Se estiver em atraso, priorize ajuste de gate e comunicacao com passageiros.',
+        dados: `${voo.companhia} | ${voo.origem_cidade}/${voo.origem_estado} -> ${voo.destino_cidade}/${voo.destino_estado} | Horário: ${formatarDataHora(voo.horario_previsto)} | Risco: ${risco.percent}% (${risco.label}).`,
+        acao: 'Se estiver em atraso, priorize ajuste de gate e comunicação com passageiros.',
         proxima: 'Quer comparar com outros voos da mesma companhia?',
       },
       score: 0.98,
@@ -243,8 +243,8 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     return {
       body: {
         resumo: `Companhia ${companhia}: ${lista.length} voos no recorte atual.`,
-        dados: p.items.map((v) => `${v.numero_voo} (${v.status}) ${v.origem_cidade}->${v.destino_cidade}`).join('; ') || 'Sem voos para a pagina solicitada.',
-        acao: 'Use pagina seguinte para continuar a lista ou filtre por status no mapa.',
+        dados: p.items.map((v) => `${v.numero_voo} (${v.status}) ${v.origem_cidade}->${v.destino_cidade}`).join('; ') || 'Sem voos para a página solicitada.',
+        acao: 'Use página seguinte para continuar a lista ou filtre por status no mapa.',
         proxima: 'Deseja apenas os voos atrasados dessa companhia?',
       },
       score: 0.88,
@@ -259,9 +259,9 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     return {
       body: {
         resumo: `Foram encontrados ${lista.length} voos atrasados.`,
-        dados: p.items.length ? p.items.map((v) => `${v.numero_voo} (${v.companhia}) ${v.origem_cidade}->${v.destino_cidade}`).join('; ') : 'Nenhum atraso nesta pagina.',
-        acao: lista.length ? 'Priorize os voos com horario mais proximo e comunique equipes de solo.' : 'Monitoramento estavel no momento.',
-        proxima: 'Quer a lista de cancelados ou os proximos voos?',
+        dados: p.items.length ? p.items.map((v) => `${v.numero_voo} (${v.companhia}) ${v.origem_cidade}->${v.destino_cidade}`).join('; ') : 'Nenhum atraso nesta página.',
+        acao: lista.length ? 'Priorize os voos com horário mais próximo e comunique equipes de solo.' : 'Monitoramento estável no momento.',
+        proxima: 'Quer a lista de cancelados ou os próximos voos?',
       },
       score: 0.94,
       topico: 'atrasos',
@@ -275,8 +275,8 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     return {
       body: {
         resumo: `Foram encontrados ${lista.length} voos cancelados.`,
-        dados: p.items.length ? p.items.map((v) => `${v.numero_voo} (${v.companhia}) ${v.origem_cidade}->${v.destino_cidade}`).join('; ') : 'Nenhum cancelamento nesta pagina.',
-        acao: lista.length ? 'Acione remarcacao e comunicacao para minimizar impacto operacional.' : 'Nenhuma acao critica de cancelamento no recorte atual.',
+        dados: p.items.length ? p.items.map((v) => `${v.numero_voo} (${v.companhia}) ${v.origem_cidade}->${v.destino_cidade}`).join('; ') : 'Nenhum cancelamento nesta página.',
+        acao: lista.length ? 'Acione remarcação e comunicação para minimizar impacto operacional.' : 'Nenhuma ação crítica de cancelamento no recorte atual.',
         proxima: 'Deseja ver os voos atrasados para cruzar risco?',
       },
       score: 0.93,
@@ -294,9 +294,9 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     const p = paginar(futuros, page, limit);
     return {
       body: {
-        resumo: `Ha ${futuros.length} voos futuros no recorte atual.`,
-        dados: p.items.length ? p.items.map((v) => `${v.numero_voo} ${v.origem_cidade}->${v.destino_cidade} (${formatarDataHora(v.horario_previsto)})`).join('; ') : 'Nenhum voo futuro nesta pagina.',
-        acao: 'Use essa fila para priorizar alocacao de gate e equipe.',
+        resumo: `Há ${futuros.length} voos futuros no recorte atual.`,
+        dados: p.items.length ? p.items.map((v) => `${v.numero_voo} ${v.origem_cidade}->${v.destino_cidade} (${formatarDataHora(v.horario_previsto)})`).join('; ') : 'Nenhum voo futuro nesta página.',
+        acao: 'Use essa fila para priorizar alocação de gate e equipe.',
         proxima: 'Quer que eu filtre apenas uma companhia?',
       },
       score: 0.86,
@@ -310,9 +310,9 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
     const internacionais = Math.max(0, voos.length - nacionais.length);
     return {
       body: {
-        resumo: `Distribuicao nacional/internacional calculada para ${voos.length} voos.`,
+        resumo: `Distribuição nacional/internacional calculada para ${voos.length} voos.`,
         dados: `Nacionais: ${nacionais.length} | Internacionais: ${internacionais}.`,
-        acao: 'Use os chips Nacional/Internacional no mapa para focar a operacao.',
+        acao: 'Use os chips Nacional/Internacional no mapa para focar a operação.',
         proxima: 'Quer ver atrasos separados por esse recorte?',
       },
       score: 0.85,
@@ -326,8 +326,8 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
       body: {
         resumo: 'Ranking de aeroportos por volume de origem/destino no recorte.',
         dados: top.length ? top.map(([a, n]) => `${a} (${n})`).join(', ') : 'Sem dados suficientes.',
-        acao: 'Foque nos aeroportos lideres para planejar capacidade e contingencia.',
-        proxima: 'Quer os voos de um aeroporto especifico?',
+        acao: 'Foque nos aeroportos líderes para planejar capacidade e contingência.',
+        proxima: 'Quer os voos de um aeroporto específico?',
       },
       score: 0.83,
       topico: 'aeroportos',
@@ -343,7 +343,7 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
       body: {
         resumo: `Listagem de voos (${p.total} no total).`,
         dados: p.items.map((v) => `${v.numero_voo} (${v.companhia}) ${v.origem_cidade}->${v.destino_cidade} [${v.status}]`).join('; '),
-        acao: p.hasNext ? 'Use a proxima pagina para continuar a listagem.' : 'Fim da listagem para o recorte atual.',
+        acao: p.hasNext ? 'Use a próxima página para continuar a listagem.' : 'Fim da listagem para o recorte atual.',
         proxima: 'Deseja que eu filtre por atrasados ou por companhia?',
       },
       score: 0.91,
@@ -357,7 +357,7 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
   return {
     body: {
       resumo: `Resumo operacional de ${statusResumo.total} voos.`,
-      dados: `${statusResumo.emVoo} em voo, ${statusResumo.previsto} previstos, ${statusResumo.atrasado} atrasados, ${statusResumo.cancelado} cancelados, ${statusResumo.concluido} concluidos. Top companhias: ${topTxt}.`,
+      dados: `${statusResumo.emVoo} em voo, ${statusResumo.previsto} previstos, ${statusResumo.atrasado} atrasados, ${statusResumo.cancelado} cancelados, ${statusResumo.concluido} concluídos. Top companhias: ${topTxt}.`,
       acao: 'Se quiser, eu detalho por companhia, atraso, cancelamento ou aeroporto.',
       proxima: 'Deseja listar voos atrasados agora?',
     },
@@ -369,8 +369,8 @@ function responderPorIntencao({ intent, q, voos, page, limit }) {
 function gerarRespostaAssistente({ pergunta, voos = [], historico = [], usuario = null, modo = 'executivo', page = 1, limit = 10 }) {
   if (!Array.isArray(voos) || voos.length === 0) {
     const body = {
-      resumo: 'Sem voos disponiveis para analise no momento.',
-      dados: 'Nao encontrei registros no banco/contexto atual.',
+      resumo: 'Sem voos disponíveis para análise no momento.',
+      dados: 'Não encontrei registros no banco/contexto atual.',
       acao: 'Verifique carga de dados de voos ou tente novamente em instantes.',
       proxima: 'Quer ajuda para navegar no site enquanto os dados carregam?',
     };
@@ -400,12 +400,12 @@ function gerarRespostaAssistente({ pergunta, voos = [], historico = [], usuario 
   });
 
   const sugestoesBase = {
-    capacidade: ['resumo de voos', 'quais voos estao atrasados?', 'status do voo LA1234'],
-    site: ['como filtrar nacionais?', 'onde vejo riscos?', 'como usar relatorios?'],
-    lista_voos: ['proxima pagina', 'somente atrasados', 'filtrar por companhia'],
-    atrasos: ['proxima pagina de atrasos', 'voos cancelados', 'atrasos por companhia'],
-    cancelados: ['proxima pagina de cancelados', 'voos atrasados', 'resumo geral'],
-    companhia: ['proxima pagina da companhia', 'somente atrasados da companhia', 'resumo geral'],
+    capacidade: ['resumo de voos', 'quais voos estão atrasados?', 'status do voo LA1234'],
+    site: ['como filtrar nacionais?', 'onde vejo riscos?', 'como usar relatórios?'],
+    lista_voos: ['próxima página', 'somente atrasados', 'filtrar por companhia'],
+    atrasos: ['próxima página de atrasos', 'voos cancelados', 'atrasos por companhia'],
+    cancelados: ['próxima página de cancelados', 'voos atrasados', 'resumo geral'],
+    companhia: ['próxima página da companhia', 'somente atrasados da companhia', 'resumo geral'],
     fallback: ['resumo de voos', 'listar voos', 'aeroportos mais movimentados'],
   };
 

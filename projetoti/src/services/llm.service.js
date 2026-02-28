@@ -44,18 +44,18 @@ function resumoVoos(voos) {
 
 function buildSystemPrompt({ modo = 'executivo', usuarioNome = null }) {
   const estilo = modo === 'tecnico'
-    ? 'respostas detalhadas, objetivas e com estrutura tecnica'
+    ? 'respostas detalhadas, objetivas e com estrutura técnica'
     : 'respostas curtas, claras e executivas';
 
   return [
-    'Voce e o Assistente IA do sistema SkyTrak.',
-    'Responda sempre em portugues do Brasil.',
+    'Você é o Assistente IA do sistema SkyTrak.',
+    'Responda sempre em português do Brasil.',
     `Use ${estilo}.`,
     'Responda somente com base no contexto fornecido.',
-    'Se faltar dado, diga explicitamente o que falta e sugira proximo passo.',
-    'Nao invente numeros, voos ou aeroportos.',
-    'Quando houver listas longas, resuma e ofereca continuidade por paginacao.',
-    usuarioNome ? `Nome do usuario atual: ${usuarioNome}.` : '',
+    'Se faltar dado, diga explicitamente o que falta e sugira próximo passo.',
+    'Não invente números, voos ou aeroportos.',
+    'Quando houver listas longas, resuma e ofereça continuidade por paginação.',
+    usuarioNome ? `Nome do usuário atual: ${usuarioNome}.` : '',
   ].filter(Boolean).join(' ');
 }
 
@@ -74,16 +74,16 @@ function buildUserPrompt({ pergunta, historico = [], voos = [] }) {
     '- Amostra de voos:',
     resumo.amostra || '(sem voos na amostra)',
     '',
-    'Historico recente:',
-    hist || '(sem historico)',
+    'Histórico recente:',
+    hist || '(sem histórico)',
     '',
-    `Pergunta atual do usuario: ${pergunta}`,
+    `Pergunta atual do usuário: ${pergunta}`,
     '',
     'Formato de resposta desejado:',
     'Resumo:',
     'Dados principais:',
-    'Acao sugerida:',
-    'Proxima pergunta util:',
+    'Ação sugerida:',
+    'Próxima pergunta útil:',
   ].join('\n');
 }
 
@@ -111,7 +111,7 @@ async function callOpenAI({ model, apiKey, systemPrompt, userPrompt }) {
 
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
-  if (!content) throw new Error('OpenAI sem conteudo de resposta');
+  if (!content) throw new Error('OpenAI sem conteúdo de resposta');
   return content;
 }
 
@@ -144,7 +144,7 @@ async function callGemini({ model, apiKey, systemPrompt, userPrompt }) {
 
   const data = await resp.json();
   const content = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('\n').trim();
-  if (!content) throw new Error('Gemini sem conteudo de resposta');
+  if (!content) throw new Error('Gemini sem conteúdo de resposta');
   return content;
 }
 
@@ -169,7 +169,7 @@ async function gerarRespostaLLM({ pergunta, historico = [], voos = [], modo = 'e
     return { resposta, provider: 'gemini', model };
   }
 
-  throw new Error('LLM_PROVIDER nao configurado (use "openai" ou "gemini")');
+  throw new Error('LLM_PROVIDER não configurado (use "openai" ou "gemini")');
 }
 
 module.exports = { gerarRespostaLLM };

@@ -23,11 +23,11 @@ Projeto com back-end (Node/Express) e front-end (React/Vite) para analise de ris
    - `cd frontend && npm install`
 
 ## Rodar
-1. Tudo automatico (instala deps, roda setup e inicia):
-   - `run-all.bat`
-
-2. Windows (atalho):
+1. Tudo automatico (instala deps, valida MySQL, cria bancos se necessario e inicia):
    - `start-all.bat`
+
+2. Setup somente (opcional):
+   - `setup.bat`
 
 3. Manual:
    - `cd projetoti && npm run dev`
@@ -37,3 +37,10 @@ Projeto com back-end (Node/Express) e front-end (React/Vite) para analise de ris
 - O back-end usa dois bancos:
   - `sistema_voos` (operacional)
   - `sistema_voos_spec` (SPEC focada no usuario/LGPD)
+
+## Documentacao completa
+- [Arquitetura](./docs/ARCHITECTURE.md)
+- [Frontend](./docs/FRONTEND.md)
+- [Backend e API](./docs/BACKEND_API.md)
+- [Banco de dados](./docs/DATABASE.md)
+- [Runbook (execucao e deploy local)](./docs/DEPLOY_RUNBOOK.md)
