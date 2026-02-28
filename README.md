@@ -1,4 +1,4 @@
-# Sky CIA
+# SkyTrack ATC
 
 Projeto com back-end (Node/Express) e front-end (React/Vite) para analise de risco de atrasos.
 
